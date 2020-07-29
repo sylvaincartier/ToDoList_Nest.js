@@ -1,31 +1,74 @@
-
 import { todos } from 'src/mock/todos.mock';
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
-import { TodoEntity } from './entity/todo.entity';
+import { TodoEntity } from '@todo/entity/todo.entity';
 import { TodoDto } from './dto/todo.dto';
 import { toPromise } from 'src/shared/utils';
 import { toTodoDto } from 'src/shared/mapper';
 import { TodoCreateDto } from './dto/todoCreate.dto';
 import { v4 as uuidV4 } from 'uuid';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
+@Injectable()
+export class TodoService {
+  constructor(
+    @InjectRepository(TodoEntity)
+    private readonly todoRepo: Repository<TodoEntity>,
+  ) {}
 
-@Injectable()export class TodoService {  
-    todos: TodoEntity[] = todos;
-  
   async getAllTodo(): Promise<TodoDto[]> {
-        const todos = await this.todos;
-        return todos.map(todo => toTodoDto(todo));
-      }
+    const todos = await this.todoRepo.find();
+    return todos.map(todo => toTodoDto(todo));
+  }
 
-  async getOneTodo(id: string): Promise<TodoDto> {    
-      const todo = this.todos.find(todo => todo.id === id);
-    if (!todo) {      
-        throw new HttpException(`Todo item doesn't exist`, HttpStatus.BAD_REQUEST);    }
-        return toPromise(toTodoDto(todo));  }
-  
-  async createTodo(todoDto: TodoCreateDto): Promise<TodoDto>{    
+  async getOneTodo(id: string): Promise<TodoDto> {
+    const todo = await this.todoRepo.findOne({where: { id }});
+    if (!todo) {
+      throw new HttpException(
+        `Todo item doesn't exist`,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    return toTodoDto(todo);
+  }
+
+  async createTodo(createTodoDto: TodoCreateDto): Promise<TodoDto> {
+    const { name, description } = createTodoDto;
+    const todo: TodoEntity = await this.todoRepo.create({name, description });
+
+    await this.todoRepo.save(todo);
+
+    return toTodoDto(todo);
+  }
+
+  async updateTodo(id: string, todoDto: TodoDto): Promise<TodoDto> {
     const { name, description } = todoDto;
-    const todo: TodoEntity = {      id: uuidV4(),      name,      description,    };
-    this.todos.push(todo);
-    return toPromise(toTodoDto(todo));  }  
+
+    let todo: TodoEntity = await this.todoRepo.findOne({ where: { id } });
+
+    if (!todo) {
+      throw new HttpException(
+        `Todo list doesn't exist`,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    todo = {
+      id,
+      name,
+      description,
+    };
+
+    await this.todoRepo.update({ id }, todo); // update
+
+    todo = await this.todoRepo.findOne({
+      where: { id },
+      relations: ['tasks', 'owner'],
+    }); // re-query
+
+    return toTodoDto(todo);
+  }
+
+
+
 }

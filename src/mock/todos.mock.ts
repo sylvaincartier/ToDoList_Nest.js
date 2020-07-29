@@ -1,4 +1,4 @@
-import { TodoEntity } from "src/todo/entity/todo.entity";
+import { TodoEntity } from "@todo/entity/todo.entity";
 
 export const todos: TodoEntity[] = [
   { id: 'eac400ba-3c78-11e9-b210-d663bd873d93', name: 'Supermarket Todo list' },
