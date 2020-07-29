@@ -1,4 +1,5 @@
 import { IsNotEmpty } from 'class-validator';
+import { TaskDto } from './task.dto';
 
 export class TodoDto {
     @IsNotEmpty()
@@ -9,4 +10,6 @@ export class TodoDto {
   
     createdOn?: Date;
     description?: string;
+
+    tasks?: TaskDto[];
   }
