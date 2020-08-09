@@ -6,11 +6,14 @@ import { TaskEntity } from '@todo/entity/task.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TaskController } from './task/task.controller';
 import { TaskService } from './task/task.service';
-
+import { UserModule } from 'src/users/user.module';
+import { AuthModule } from 'src/auth/auth.module';
 
 @Module({
   imports:
-   [TypeOrmModule.forFeature([TodoEntity, TaskEntity])],
+   [ UserModule,
+     AuthModule,
+     TypeOrmModule.forFeature([TodoEntity, TaskEntity])],
   controllers: [TodoController, TaskController],
   providers: [TodoService, TaskService],
 })
