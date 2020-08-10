@@ -2,10 +2,8 @@ import { todos } from 'src/mock/todos.mock';
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { TodoEntity } from '@todo/entity/todo.entity';
 import { TodoDto } from './dto/todo.dto';
-import { toPromise } from 'src/shared/utils';
 import { toTodoDto } from 'src/shared/mapper';
 import { TodoCreateDto } from './dto/todoCreate.dto';
-import { v4 as uuidV4 } from 'uuid';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserDto } from 'src/users/dto/user.dto';
@@ -70,6 +68,31 @@ export class TodoService {
       where: { id },
       relations: ['tasks', 'owner'],
     }); // re-query
+
+    return toTodoDto(todo);
+  }
+
+  async destroy(id: string): Promise<TodoDto> {
+    const todo: TodoEntity = await this.todoRepo.findOne({
+      where: { id },
+      relations: ['tasks', 'owner'],
+    });
+
+    if (!todo) {
+      throw new HttpException(
+        `Todo list doesn't exist`,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    if (todo.tasks && todo.tasks.length > 0) {
+      throw new HttpException(
+        `Cannot delete this Todo list, it has existing tasks`,
+        HttpStatus.FORBIDDEN,
+      );
+    }
+
+    await this.todoRepo.delete({ id }); // delete todo list
 
     return toTodoDto(todo);
   }

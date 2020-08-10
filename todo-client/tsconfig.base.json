@@ -23,6 +23,10 @@
       "todo": [
         "dist/todo/todo",
         "dist/todo"
+      ],
+      "app-common": [
+        "dist/app-common/app-common",
+        "dist/app-common"
       ]
     }
   }
